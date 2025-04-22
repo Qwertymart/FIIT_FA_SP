@@ -17,11 +17,12 @@ class server
 
     std::unordered_map<int, std::unordered_map<logger::severity, std::pair<std::string, bool>>> _streams;
 
-    std::shared_mutex _mut;
-
+    std::shared_mutex _mut; // разделяемый мьютекс, использование через std::shared_lock позволяет
+    // нескольким потокам читать одновременно
+    // std::lock_guard позволяет писать только одному потоку
 public:
 
-    explicit server(uint16_t port = 9200);
+    explicit server(uint16_t port = 8080);
 
     server(const server&) = delete;
     server& operator=(const server&) = delete;

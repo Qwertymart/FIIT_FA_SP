@@ -37,14 +37,15 @@ TEST(positiveTests, test1)
                 logger::severity::information
             }
         }));
+
     std::unique_ptr<smart_mem_resource> allocator_instance(new allocator_buddies_system(12, nullptr, logger_instance.get(), allocator_with_fit_mode::fit_mode::first_fit));
-    
+
     auto actual_blocks_state = dynamic_cast<allocator_test_utils *>(allocator_instance.get())->get_blocks_info();
     std::vector<allocator_test_utils::block_info> expected_blocks_state
         {
             { .block_size = 4096, .is_block_occupied = false }
         };
-    
+
     ASSERT_EQ(actual_blocks_state.size(), expected_blocks_state.size());
     for (int i = 0; i < actual_blocks_state.size(); i++)
     {
@@ -210,6 +211,7 @@ int main(
     char *argv[])
 {
     testing::InitGoogleTest(&argc, argv);
+    //::testing::GTEST_FLAG(filter) = "positiveTests.test1";
     
     return RUN_ALL_TESTS();
 }

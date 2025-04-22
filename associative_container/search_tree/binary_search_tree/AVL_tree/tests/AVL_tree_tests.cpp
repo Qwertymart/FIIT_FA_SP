@@ -156,6 +156,11 @@ TEST(AVLTreePositiveTests, test1)
     avl->emplace(3, "d");
     avl->emplace(14, "e");
     avl->emplace(1, "l");
+
+//    for (auto it = avl->begin(); it != avl->end(); ++it) {
+//        std::cout << "Key: " << it->first << ", Value: " << it->second
+//                  << ", Depth: " << it.depth() << ", Height: " << it.get_height() << std::endl;
+//    }
     
     std::vector<test_data<int, std::string>> expected_result =
         {
@@ -191,6 +196,11 @@ TEST(AVLTreePositiveTests, test2)
     avl->emplace(15, 1);
     avl->emplace(3, 67);
     avl->emplace(4, 45);
+
+//    for (auto it = avl->begin(); it != avl->end(); ++it) {
+//        std::cout << "Key: " << it->first << ", Value: " << it->second
+//                  << ", Depth: " << it.depth() << ", Height: " << it.get_height() << std::endl;
+//    }
     
     std::vector<test_data<int, int>> expected_result =
         {
@@ -338,7 +348,7 @@ TEST(AVLTreePositiveTests, test6)
     avl1->emplace(5, "b");
     
     avl1->erase(5);
-    
+
     std::vector<test_data<int, std::string>> expected_result =
         {
             test_data<int, std::string>(2, 1, "i", 1),
@@ -572,6 +582,7 @@ int main(
     char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
+    //::testing::GTEST_FLAG(filter) = "AVLTreePositiveTests.test1";
 
     return RUN_ALL_TESTS();
 }

@@ -78,6 +78,7 @@ bool infix_iterator_test(
     
     for (; vec_begin != vec_end; ++vec_begin)
     {
+
         auto& item = *vec_begin;
         if (it.depth() != item.depth || it->first != item.key || it->second != item.value)
         {
@@ -126,8 +127,11 @@ bool postfix_iterator_test(
     
     for (auto& item : expected_result)
     {
+       // std::cout<<"item.key: " << item.key << " item.value: " << item.value << item.depth << std::endl;
+        //std::cout<<"it.key: " << it->first << " it.value: " << it->second << it.depth() << std::endl;
         if (it.depth() != item.depth || it->first != item.key || it->second != item.value)
         {
+
             return false;
         }
         
@@ -136,6 +140,7 @@ bool postfix_iterator_test(
     
     return true;
 }
+
 
 TEST(binarySearchTreePositiveTests, noIteratorTest)
 {
@@ -148,9 +153,9 @@ TEST(binarySearchTreePositiveTests, noIteratorTest)
                                            }));
     logger->trace("binarySearchTreePositiveTests.test1 started");
 
-    auto al = std::make_unique<allocator_sorted_list>(10000);
+    //auto al = std::make_unique<allocator_sorted_list>(10000);
 
-    auto bst = std::make_unique<binary_search_tree<int, std::string>>(std::less<int>(), al.get(), logger.get());
+    auto bst = std::make_unique<binary_search_tree<int, std::string>>(std::less<int>(), pp_allocator<int>(), logger.get());
 //    auto bst = new binary_search_tree<int, std::string>(key_comparer(), al.get(), logger.get());
 
     bst->emplace(5, "a");
@@ -169,6 +174,7 @@ TEST(binarySearchTreePositiveTests, noIteratorTest)
     EXPECT_EQ("t", bst->at(5));
 
     ASSERT_THROW(bst->at(144), std::out_of_range);
+
 }
 
 TEST(binarySearchTreePositiveTests, test1)
@@ -217,7 +223,7 @@ TEST(binarySearchTreePositiveTests, test2)
                                                          }));
     logger->trace("binarySearchTreePositiveTests.test2 started");
     
-    auto bst = std::make_unique<binary_search_tree<int, int>>(std::less<int>(), pp_allocator<int>(), logger.get());
+    auto bst = std::make_unique<binary_search_tree<int, int>>(std::less<int>(), pp_allocator<std::pair<int, int>>(), logger.get());
     
     bst->emplace(1, 5);
     bst->emplace(2, 12);
@@ -369,7 +375,7 @@ TEST(binarySearchTreePositiveTests, test6)
     bst1->emplace(5, "b");
     
     bst1->erase(5);
-    
+
     std::vector<test_data<int, std::string>> expected_result =
         {
                 test_data<int, std::string>(2, 1, "i"),
@@ -404,8 +410,9 @@ TEST(binarySearchTreePositiveTests, test7)
     bst1->emplace(3, "i");
     bst1->emplace(2, "l");
     bst1->emplace(5, "b");
-    
+
     bst1->erase(3);
+
     
     std::vector<test_data<int, std::string>> expected_result =
         {
@@ -443,9 +450,9 @@ TEST(binarySearchTreePositiveTests, test8)
     bst1->emplace(12, "l");
     bst1->emplace(17, "b");
     bst1->emplace(18, "e");
-    
+
     bst1->erase(15);
-    
+
     std::vector<test_data<int, std::string>> expected_result =
         {
                 test_data<int, std::string>(0, 6, "a"),
@@ -550,6 +557,5 @@ int main(
     char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    
     return RUN_ALL_TESTS();
 }

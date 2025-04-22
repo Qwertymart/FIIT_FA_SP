@@ -34,10 +34,14 @@ private:
 
         refcounted_stream& operator=(refcounted_stream&& oth) noexcept;
 
+        const std::string& get_path() const;
+
+
         //if ofstream* is nullptr initializes it with opened file from global map
         void open();
 
         ~refcounted_stream();
+
     };
 
     //region refcounted_stream

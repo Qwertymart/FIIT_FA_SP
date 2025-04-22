@@ -30,7 +30,6 @@ server::server(uint16_t port)
 
         std::lock_guard lock(_mut);
         auto it = _streams.find(pid);
-
         if (it == _streams.end())
         {
             it = _streams.emplace(pid, std::unordered_map<logger::severity, std::pair<std::string, bool>>()).first;
@@ -48,7 +47,7 @@ server::server(uint16_t port)
             std::ofstream tmp(inner_it->second.first);
         inner_it->second.second = console;
 
-        return 0;
+        return crow::response(200);
     });
 
     CROW_ROUTE(app, "/destroy")([&](const crow::request &req){
@@ -61,7 +60,7 @@ server::server(uint16_t port)
         std::lock_guard lock(_mut);
         _streams.erase(pid);
 
-        return 0;
+        return crow::response(200);
     });
 
     CROW_ROUTE(app, "/log")([&](const crow::request &req){
@@ -94,7 +93,7 @@ server::server(uint16_t port)
                     std::cout << message << std::endl;
             }
         }
-        return 0;
+        return crow::response(200);
     });
 
 

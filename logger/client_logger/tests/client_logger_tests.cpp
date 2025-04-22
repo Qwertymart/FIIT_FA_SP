@@ -10,9 +10,9 @@ int main(int argc, char *argv[])
 
     client_logger_builder builder;
 
-    builder.add_file_stream("a.txt" ,logger::severity::trace).
-            add_file_stream("b.txt" ,logger::severity::trace).
-            add_file_stream("b.txt" ,logger::severity::trace).
+    builder.add_file_stream("a.txt", logger::severity::trace).
+            add_file_stream("b.txt", logger::severity::trace).
+            add_file_stream("b.txt", logger::severity::trace).
             add_file_stream("a.txt", logger::severity::debug).
             add_file_stream("../logger/a.txt", logger::severity::debug).
             add_console_stream(logger::severity::trace).
@@ -21,8 +21,9 @@ int main(int argc, char *argv[])
     builder.transform_with_configuration("set.json", "log");
 
     std::unique_ptr<logger> log(builder.build());
-
-    log->trace("it is a very long message!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!").debug("dd");
+    log->trace(
+            "a and console and b!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!").debug(
+            "dd").warning("warning");
 
     std::unique_ptr<logger> logger2(builder.build());
 

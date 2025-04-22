@@ -5,27 +5,38 @@ project(mp_os LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-message([[VCPKG toolchain setup example. It is needed for some libraries. Highly recommended to pass it by command line arguments for cmake configuration (IDE can help with this).
-        set(VCPKG_TARGET_TRIPLET x64-windows)
-        set(CMAKE_TOOLCHAIN_FILE C:/Programming/vcpkg/scripts/buildsystems/vcpkg.cmake)]])
+# Установка путей vcpkg
+set(VCPKG_ROOT "C:/Users/u/.vcpkg-clion/vcpkg")
+set(VCPKG_INCLUDE_DIR "${VCPKG_ROOT}/installed/x64-windows/include")
+set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 
-include(FetchContent)
-FetchContent_Declare(
-        googletest
-        URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip)
-FetchContent_MakeAvailable(googletest)
+message(STATUS "=== Начало конфигурации ===")
+message(STATUS "VCPKG root: ${VCPKG_ROOT}")
+message(STATUS "VCPKG include dir: ${VCPKG_INCLUDE_DIR}")
 
-FetchContent_Declare(
-        nlohmann_json
-        GIT_REPOSITORY https://github.com/nlohmann/json.git
-        GIT_TAG v3.11.3
-)
-FetchContent_MakeAvailable(nlohmann_json)
+# Поиск зависимостей
+find_package(Boost CONFIG REQUIRED COMPONENTS system container)
+find_package(OpenSSL CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
+find_package(GTest CONFIG REQUIRED)
+find_package(Asio CONFIG REQUIRED)
+find_package(Crow CONFIG REQUIRED)
+find_package(httplib CONFIG REQUIRED)  # Добавляем httplib
 
-find_package(Boost COMPONENTS system container REQUIRED) # Ставить через vcpkg
+message(STATUS "Boost: ${Boost_FOUND} (${Boost_VERSION})")
+message(STATUS "OpenSSL: ${OPENSSL_FOUND} (${OPENSSL_VERSION})")
+message(STATUS "nlohmann_json: ${nlohmann_json_FOUND}")
+message(STATUS "GTest: ${GTest_FOUND}")
+message(STATUS "Asio: ${Asio_FOUND}")
+message(STATUS "Crow: ${Crow_FOUND}")
+message(STATUS "httplib: ${httplib_FOUND}")  # Проверяем httplib
 
+# Добавление подпроектов
+message(STATUS "=== Добавление подпроектов ===")
 add_subdirectory(allocator)
 add_subdirectory(arithmetic)
 add_subdirectory(associative_container)
 add_subdirectory(common)
 add_subdirectory(logger)
+
+message(STATUS "=== Конфигурация завершена ===")

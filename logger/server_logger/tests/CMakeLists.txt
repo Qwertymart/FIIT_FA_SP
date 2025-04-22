@@ -3,9 +3,10 @@ add_executable(
         server_logger_tests.cpp)
 
 target_link_libraries(
-        mp_os_lggr_srvr_lggr_tests
+        mp_os_lggr_clnt_lggr_tests
         PRIVATE
-        gtest_main
+        GTest::gtest
+        GTest::gtest_main
         Crow::Crow
 )
 target_link_libraries(
@@ -22,7 +23,8 @@ add_executable(
 target_link_libraries(
         serv_test
         PRIVATE
-        gtest_main
+        GTest::gtest
+        GTest::gtest_main
         Crow::Crow
 )
 target_link_libraries(
