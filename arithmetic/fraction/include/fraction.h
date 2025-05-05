@@ -4,6 +4,7 @@
 #include <big_int.h>
 #include <not_implemented.h>
 #include <concepts>
+#include <numeric>
 
 class fraction final
 {
@@ -20,7 +21,16 @@ public:
     /** Perfect forwarding ctor
      */
     template<std::convertible_to<big_int> f, std::convertible_to<big_int> s>
-    fraction(f &&numerator, s &&denominator);
+    fraction(f &&numerator, s &&denominator)
+            : _numerator(std::forward<f>(numerator)), _denominator(std::forward<s>(denominator))
+    {
+        if (denominator == 0) {
+            throw std::invalid_argument("Denominator cannot be zero.");
+        }
+        optimise();
+
+    }
+
 
     fraction(pp_allocator<big_int::value_type> = pp_allocator<big_int::value_type>());
 
@@ -42,7 +52,10 @@ public:
 
     fraction operator/(fraction const &other) const;
 
+    fraction abs() const;
+
 public:
+
 
     bool operator==(fraction const &other) const noexcept;
 
@@ -82,6 +95,9 @@ public:
 
     fraction arccosec(fraction const &epsilon = fraction(1_bi, 1000000_bi)) const;
 
+    fraction sqrt(const fraction& epsilon) const;
+    fraction ln_of_2(const fraction& epsilon) const;
+
 public:
 
     fraction pow(size_t degree) const;
@@ -99,5 +115,20 @@ public:
     fraction lg(fraction const &epsilon = fraction(1_bi, 1000000_bi)) const;
 
 };
+
+
+inline big_int abs(big_int const& value) {
+    return value < 0_bi ? -value : value;
+}
+
+inline big_int gcd(big_int a, big_int b) {
+    while (b != 0_bi) {
+        big_int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
 
 #endif //MP_OS_FRACTION_H

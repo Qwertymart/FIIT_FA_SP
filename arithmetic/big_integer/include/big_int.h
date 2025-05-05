@@ -46,11 +46,14 @@ namespace __detail
     }
 }
 
+constexpr size_t base = 1ULL<<(8 * sizeof(unsigned int));
+
 class big_int
 {
     // Call optimise after every operation!!!
     bool _sign; // 1 +  0 -
     std::vector<unsigned int, pp_allocator<unsigned int>> _digits;
+
 
 public:
 
@@ -77,6 +80,7 @@ private:
 
 public:
 
+
     using value_type = unsigned int;
 
     template<class alloc>
@@ -91,17 +95,22 @@ public:
     template<std::integral Num>
     big_int(Num d, pp_allocator<unsigned int> = pp_allocator<unsigned int>());
 
+    static big_int factorial(big_int n);
+
+
     big_int(pp_allocator<unsigned int> = pp_allocator<unsigned int>());
 
     explicit operator bool() const noexcept; //false if 0 , else true
 
     big_int& operator++() &;
     big_int operator++(int);
+    big_int operator-() const;
 
     big_int& operator--() &;
     big_int operator--(int);
 
     big_int& operator+=(const big_int& other) &;
+
 
     /** Shift will be needed for multiplication implementation
      *  @example Shift = 0: 111 + 222 = 333
@@ -127,7 +136,13 @@ public:
     big_int& operator%=(const big_int& other) &;
 
     big_int& modulo_assign(const big_int& other, division_rule rule = division_rule::trivial) &;
+    std::strong_ordering compare(const big_int &other, size_t shift) const noexcept;
 
+    std::strong_ordering compare_no_sign(const std::vector<unsigned int, pp_allocator<unsigned int>> &lhs,
+                                         const std::vector<unsigned int, pp_allocator<unsigned int>> &rhs,
+                                         size_t shift) const noexcept;
+
+    int compare_absolute(const big_int& a, const big_int& b) const;
     big_int operator+(const big_int& other) const;
     big_int operator-(const big_int& other) const;
     big_int operator*(const big_int& other) const;
@@ -168,16 +183,45 @@ public:
 
 template<class alloc>
 big_int::big_int(const std::vector<unsigned int, alloc> &digits, bool sign, pp_allocator<unsigned int> allocator)
+        : _digits(digits.begin(), digits.end(), allocator), _sign(sign)
 {
-    throw not_implemented("template<class alloc> big_int::big_int(const std::vector<unsigned int, alloc> &digits, bool sign, pp_allocator<unsigned int> allocator)", "your code should be here...");
+
+    while (_digits.size() > 1 && _digits.back() == 0)
+    {
+        _digits.pop_back();
+    }
+
+    if (_digits.empty())
+    {
+        _digits.push_back(0);
+        _sign = true;
+    }
 }
 
 template<std::integral Num>
-big_int::big_int(Num d, pp_allocator<unsigned int>)
-{
-    throw not_implemented("template<std::integral Num>big_int::big_int(Num, pp_allocator<unsigned int>)", "your code should be here...");
+big_int::big_int(Num d, pp_allocator<unsigned int> alloc)
+        : _sign(d >= 0), _digits(alloc) {
+    unsigned long long value = d < 0 ? -d : d;
+
+
+    if (value == 0) {
+        _digits.push_back(0);
+    } else {
+        while (value != 0) {
+            _digits.push_back(static_cast<unsigned long long>(value % base));
+            value /= base;
+        }
+    }
+
+    while (_digits.size() > 1 && _digits.back() == 0)
+    {
+        _digits.pop_back();
+    }
+
 }
 
 big_int operator""_bi(unsigned long long n);
-
+//reg
+#define threshold 32
+//reg
 #endif //MP_OS_BIG_INT_H

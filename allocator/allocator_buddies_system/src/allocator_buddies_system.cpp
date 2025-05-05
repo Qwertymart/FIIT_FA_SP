@@ -19,7 +19,7 @@ allocator_buddies_system::allocator_buddies_system(
     {
         try
         {
-            _trusted_memory = ::operator new(real_size);
+            _trusted_memory = ::operator new(real_size); //глобальный new
         } catch (std::bad_alloc& ex)
         {
             error_with_guard("Bad allocation memory");
@@ -65,6 +65,7 @@ allocator_buddies_system& allocator_buddies_system::operator=(allocator_buddies_
 }
 
 allocator_buddies_system::allocator_buddies_system(const allocator_buddies_system& other) {
+    //выделяем по степени и копируем
     if (other._trusted_memory) {
         size_t k = *reinterpret_cast<unsigned char*>(
                 static_cast<char*>(other._trusted_memory) + sizeof(logger*) + sizeof(allocator_dbg_helper*) + sizeof(fit_mode));
@@ -97,6 +98,8 @@ allocator_buddies_system& allocator_buddies_system::operator=(const allocator_bu
     return *this;
 }
 
+
+// заполнение меты
 void allocator_buddies_system::fill_allocator_fields(
         size_t space_size,
         std::pmr::memory_resource* parent_allocator,
@@ -128,7 +131,7 @@ void allocator_buddies_system::fill_allocator_fields(
 void* allocator_buddies_system::do_allocate_sm(size_t size) {
     std::lock_guard lock(get_mutex());
 
-    size_t required = size + occupied_block_metadata_size;
+    size_t required = size + occupied_block_metadata_size; // с учетом меты
     void* block = nullptr;
 
     switch (*reinterpret_cast<fit_mode*>(
@@ -149,25 +152,26 @@ void* allocator_buddies_system::do_allocate_sm(size_t size) {
     auto* meta = reinterpret_cast<block_metadata*>(block);
     size_t block_size = get_size_block(block);
 
-    // Разделяем блок, пока возможно и размер больше минимального
+    // делим пока возможно
     while (block_size >= 2 * required &&
            meta->size > min_k ) {
 
         size_t new_size = meta->size - 1;
-        size_t half = 1 << new_size;  // Новый размер после разделения
+        size_t half = 1 << new_size;
 
-        // Создаем buddy-блок
+
         auto* buddy = reinterpret_cast<block_metadata*>(static_cast<char*>(block) + half);
         buddy->occupied = false;
         buddy->size = new_size;
 
-        // Обновляем текущий блок
+
         meta->size = new_size;
         block_size = half;
     }
 
     meta->occupied = true;
     return static_cast<char*>(block) + occupied_block_metadata_size;
+    // указатель после меты
 }
 
 void allocator_buddies_system::do_deallocate_sm(void* at) {
@@ -181,6 +185,7 @@ void allocator_buddies_system::do_deallocate_sm(void* at) {
         size_t offset = reinterpret_cast<char*>(block) - static_cast<char*>(_trusted_memory) - allocator_metadata_size;
         size_t size = get_size_block(block);
         size_t buddy_offset = offset ^ size;
+        // смещение относительно начала xor с размером = смещение "брата"
 
         auto* buddy = reinterpret_cast<block_metadata*>(
                 static_cast<char*>(_trusted_memory) + allocator_metadata_size + buddy_offset);
@@ -188,6 +193,7 @@ void allocator_buddies_system::do_deallocate_sm(void* at) {
         if (buddy->occupied || buddy->size != block->size) break;
 
         if (buddy < block) std::swap(buddy, block);
+        // меняем местами, чтобы всегда был меньший адрес
 
         block->size += 1;
         block->occupied = false;

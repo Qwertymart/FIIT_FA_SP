@@ -60,7 +60,10 @@ TEST(positive_tests_kar, test2)
 
     big_int bigint_1("20944325634363");
     big_int bigint_2("0");
+
+    std::cout<<"bigint_2: " << big_int("0") << std::endl;
     bigint_1 *= bigint_2;
+    std::cout<<"bigint_1: " << bigint_1 << std::endl;
 
     EXPECT_TRUE((std::ostringstream() << bigint_1).str() == "0");
 

@@ -5,7 +5,8 @@ add_executable(
 target_link_libraries(
         mp_os_arthmtc_bg_intgr_tests_bgnt
         PRIVATE
-        gtest_main)
+        GTest::gtest
+        GTest::gtest_main)
 target_link_libraries(
         mp_os_arthmtc_bg_intgr_tests_bgnt
         PRIVATE
