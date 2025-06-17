@@ -5,7 +5,8 @@ add_executable(
 target_link_libraries(
         mp_os_assctv_cntnr_srch_tr_indxng_tr_b_tr_dsk_tests
         PRIVATE
-        gtest_main)
+        GTest::gtest_main
+        GTest::gtest)
 target_link_libraries(
         mp_os_assctv_cntnr_srch_tr_indxng_tr_b_tr_dsk_tests
         PRIVATE

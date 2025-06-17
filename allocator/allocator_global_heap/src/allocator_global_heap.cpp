@@ -55,7 +55,7 @@ void *allocator_global_heap::do_allocate_sm(size_t size)
 {
     if (_logger) _logger->debug("allocator_global_heap::do_allocate_sm started. Size: " + std::to_string(size));
     try {
-        void *ptr = ::operator new(size);// можно без ::, но тогда может использовать не глобальную версию, а перегруз
+        void *ptr = ::operator new(size);
         if (_logger) _logger->debug("allocator_global_heap::do_allocate_sm finished. Ptr: " + std::to_string(reinterpret_cast<std::uintptr_t>(ptr)));
         return ptr;
     } catch (const std::bad_alloc &) {

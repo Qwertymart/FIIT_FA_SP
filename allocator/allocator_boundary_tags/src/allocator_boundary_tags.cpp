@@ -199,7 +199,6 @@ void* allocator_boundary_tags::allocate_first_fit(void* left_elem, size_t size)
     void* next_block = get_next_existing_block(left_elem);
     void* block = left_elem;
 
-    // 1. Проверка начала памяти
     void* st_ptr = slide_block_for(_trusted_memory, allocator_metadata_size);
     if (st_ptr != left_elem)
     {
@@ -215,7 +214,6 @@ void* allocator_boundary_tags::allocate_first_fit(void* left_elem, size_t size)
         }
     }
 
-    // 2. Поиск в середине
     while (next_block != nullptr && place_to_place == nullptr)
     {
         size_t dt = get_block_distance(block, next_block);
@@ -229,7 +227,6 @@ void* allocator_boundary_tags::allocate_first_fit(void* left_elem, size_t size)
         next_block = get_next_existing_block(block);
     }
 
-    // 3. Проверка конца
     if (place_to_place == nullptr)
     {
         size_t dt = reinterpret_cast<byte*>(block) + get_block_data_size(block) + occupied_block_metadata_size - (reinterpret_cast<byte*>(_trusted_memory) + allocator_metadata_size);
@@ -687,10 +684,6 @@ std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_block
     throw not_implemented("std::vector<allocator_test_utils::block_info> allocator_boundary_tags::get_blocks_info_inner() const", "your code should be here...");
 }
 
-allocator_boundary_tags::allocator_boundary_tags(const allocator_boundary_tags &other)
-{
-    throw not_implemented("allocator_boundary_tags::allocator_boundary_tags(const allocator_boundary_tags &other)", "your code should be here...");
-}
 
 allocator_boundary_tags &allocator_boundary_tags::operator=(const allocator_boundary_tags &other)
 {

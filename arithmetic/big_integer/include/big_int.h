@@ -199,26 +199,26 @@ big_int::big_int(const std::vector<unsigned int, alloc> &digits, bool sign, pp_a
 }
 
 template<std::integral Num>
-big_int::big_int(Num d, pp_allocator<unsigned int> alloc)
-        : _sign(d >= 0), _digits(alloc) {
-    unsigned long long value = d < 0 ? -d : d;
+
+big_int::big_int(Num d, pp_allocator<unsigned int>)
+{
+    _sign = (d >= 0);
+
+    unsigned long long abs_value = _sign ? d : -static_cast<long long>(d);
 
 
-    if (value == 0) {
-        _digits.push_back(0);
-    } else {
-        while (value != 0) {
-            _digits.push_back(static_cast<unsigned long long>(value % base));
-            value /= base;
-        }
-    }
-
-    while (_digits.size() > 1 && _digits.back() == 0)
+    while (abs_value > 0)
     {
-        _digits.pop_back();
+        _digits.push_back(abs_value % base);
+        abs_value /= base;
     }
 
+    if (_digits.empty())
+    {
+        _digits.push_back(0);
+    }
 }
+
 
 big_int operator""_bi(unsigned long long n);
 //reg

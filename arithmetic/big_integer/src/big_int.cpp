@@ -456,7 +456,7 @@ big_int &big_int::minus_assign(const big_int &other, size_t shift) & {
 
 big_int &big_int::operator*=(const big_int &other) &
 {
-    return multiply_assign(other, multiplication_rule::Karatsuba);
+    return multiply_assign(other, multiplication_rule::trivial);
 }
 
 big_int &big_int::operator/=(const big_int &other) &
@@ -534,7 +534,7 @@ big_int::big_int(const std::string &num, unsigned int radix, pp_allocator<unsign
     auto end = num.end();
 
     if (it != end && (*it == '-' || *it == '+')) {
-        _sign = (*it == '+');
+        _sign = (*it != '-');
         ++it;
     }
 
@@ -565,6 +565,7 @@ big_int::big_int(const std::string &num, unsigned int radix, pp_allocator<unsign
     _digits = std::move(current_value._digits);
 }
 
+
 big_int::big_int(pp_allocator<unsigned int> alloc)
 :_sign(true), _digits(alloc)
 {
@@ -578,31 +579,69 @@ big_int &big_int::multiply_assign(const big_int &other, big_int::multiplication_
         return *this;
     }
 
-    big_int result((pp_allocator<unsigned int>()));
+    std::vector<unsigned int, pp_allocator<unsigned int>> result(_digits.size() + other._digits.size(), 0);
+    bool result_sign = (_sign == other._sign);
 
     switch (rule) {
         case multiplication_rule::trivial: {
-            result._digits.resize(_digits.size() + other._digits.size(), 0);
+            result.assign(_digits.size() + other._digits.size(), 0);
+
+            constexpr unsigned int HALF_BITS = sizeof(unsigned int) * 4;
+            constexpr unsigned int HALF_MASK = (1u << HALF_BITS) - 1; //меньшая половина
+            constexpr unsigned int FULL_MASK = 0xFFFFFFFF;
 
             for (size_t i = 0; i < _digits.size(); ++i) {
-                unsigned long long carry = 0;
-                for (size_t j = 0; j < other._digits.size() || carry != 0; ++j) {
-                    unsigned long long product = result._digits[i + j] +
-                                                 static_cast<unsigned long long>(_digits[i]) *
-                                                 (j < other._digits.size() ? other._digits[j] : 0) +
-                                                 carry;
+                unsigned int a = _digits[i];
+                unsigned int a_lo = a & HALF_MASK;
+                unsigned int a_hi = a >> HALF_BITS;
 
-                    result._digits[i + j] = static_cast<unsigned int>(product % base);
-                    carry = product / base;
+                unsigned int carry = 0;
+
+                for (size_t j = 0; j < other._digits.size() || carry > 0; ++j) {
+                    unsigned int b = (j < other._digits.size()) ? other._digits[j] : 0;
+                    unsigned int b_lo = b & HALF_MASK;
+                    unsigned int b_hi = b >> HALF_BITS;
+
+
+                    // части умножения
+                    unsigned int p0 = a_lo * b_lo;
+                    unsigned int p1 = a_lo * b_hi;
+                    unsigned int p2 = a_hi * b_lo;
+                    unsigned int p3 = a_hi * b_hi;
+
+                    //центральная часть формируется из
+                    //младшая * малдшая(остаток, младшая часть будет записана отдельно)
+                    // младшая * старшая
+                    // старшая младшая
+                    unsigned int mid1 = p0 >> HALF_BITS;
+                    unsigned int mid2 = p1 & HALF_MASK;
+                    unsigned int mid3 = p2 & HALF_MASK;
+
+                    // младшая часть p0 + накопленный результат + перенос
+                    unsigned int sum_low = (p0 & HALF_MASK) + ((result[i + j] & HALF_MASK) + (carry & HALF_MASK));
+                    unsigned int carry_low = sum_low >> HALF_BITS;
+                    sum_low &= HALF_MASK;
+
+                    // все mid`ы + старшая часть накоп результата + перенос + младший перенос
+                    unsigned int sum_mid = mid1 + mid2 + mid3 + (result[i + j] >> HALF_BITS) + (carry >> HALF_BITS) + carry_low;
+
+
+                    unsigned int sum_hi = (p1 >> HALF_BITS) + (p2 >> HALF_BITS) + p3 + (sum_mid >> HALF_BITS);
+                    sum_mid &= HALF_MASK;
+
+                    result[i + j] = (sum_mid << HALF_BITS) | sum_low; // пихаем в текущую ячейку собранный результат
+                    carry = sum_hi;
                 }
+
             }
 
-            while (result._digits.size() > 1 && result._digits.back() == 0) {
-                result._digits.pop_back();
-            }
+            _digits = std::move(result);
+            _sign = result_sign;
 
-            result._sign = (_sign == other._sign);
-            break;
+            while (_digits.size() > 1 && _digits.back() == 0)
+                _digits.pop_back();
+
+            return *this;
         }
         case multiplication_rule::Karatsuba: {
 
@@ -663,7 +702,10 @@ big_int &big_int::multiply_assign(const big_int &other, big_int::multiplication_
             throw not_implemented("big_int &big_int::multiply_assign(const big_int &other, multiplication_rule rule) &", "your code should be here...");
     }
 
-    *this = std::move(result);
+    _digits = std::move(result);
+    _sign = result_sign;
+    while (_digits.size() > 1 && _digits.back() == 0)
+        _digits.pop_back();
     return *this;
 }
 
@@ -673,41 +715,58 @@ big_int &big_int::divide_assign(const big_int &other, big_int::division_rule rul
         throw std::invalid_argument("Division by zero is not allowed.");
     }
 
-
-    big_int result((pp_allocator<unsigned int>()));
-
     switch (rule) {
         case division_rule::trivial: {
+            bool result_sign = (_sign == other._sign);
+
             big_int dividend = *this;
             big_int divisor = other;
-            result = big_int(0);
-
             dividend._sign = true;
             divisor._sign = true;
 
-            while (dividend >= divisor) {
-                big_int temp_divisor = divisor;
-                big_int quotient = 1;
-
-                while ((temp_divisor << 1) <= dividend) {
-                    temp_divisor <<= 1;
-                    quotient <<= 1;
-                }
-
-                dividend -= temp_divisor;
-                result += quotient;
+            if (dividend < divisor) {
+                *this = big_int(0);
+                return *this;
             }
 
-            result._sign = (_sign == other._sign);
-            break;
+            big_int result(0, pp_allocator<unsigned int>());
+            big_int current(0, pp_allocator<unsigned int>());
+            result._digits.resize(dividend._digits.size(), 0);
+
+            for (std::size_t i = dividend._digits.size(); i-- > 0;) {
+                // сдвигаем current влево на одну позицию и добавляем текущий разряд
+                current._digits.insert(current._digits.begin(), dividend._digits[i]);
+                while (current._digits.size() > 1 && current._digits.back() == 0)
+                    current._digits.pop_back();
+
+                // бинарным поиском ищем максимальное значение x, такое что divisor * x <= current
+                unsigned int x = 0, low = 0, high = std::numeric_limits<unsigned int>::max();
+                while (low <= high) {
+                    unsigned int mid = low + (high - low) / 2;
+                    big_int prod = divisor * mid;
+                    if (prod <= current) {
+                        x = mid;
+                        low = mid + 1;
+                    } else {
+                        high = mid - 1;
+                    }
+                }
+
+                result._digits[i] = x;
+                current -= divisor * x;
+            }
+
+            while (result._digits.size() > 1 && result._digits.back() == 0)
+                result._digits.pop_back();
+            result._sign = result_sign;
+            *this = std::move(result);
+            return *this;
         }
         case division_rule::Newton:
         case division_rule::BurnikelZiegler:
             throw not_implemented("big_int &big_int::divide_assign(const big_int &other, division_rule rule) &", "your code should be here...");
     }
 
-    *this = std::move(result);
-    return *this;
 }
 
 big_int &big_int::modulo_assign(const big_int &other, big_int::division_rule rule) &

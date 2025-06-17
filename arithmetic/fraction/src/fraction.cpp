@@ -317,7 +317,6 @@ fraction ln2_approx() {
 }
 
 fraction fraction::log2(const fraction &epsilon) const {
-    // fraction ln2 = fraction(2_bi, 1_bi).ln(epsilon); // ненадёжно
     fraction ln2 = ln2_approx();
     return ln(epsilon) / ln2;
 }

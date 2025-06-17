@@ -63,7 +63,7 @@ public:
             logger* logger = nullptr,
             fit_mode allocate_fit_mode = fit_mode::first_fit);
 
-    allocator_buddies_system(const allocator_buddies_system& other);
+    allocator_buddies_system(const allocator_buddies_system& other) = delete;
     allocator_buddies_system& operator=(const allocator_buddies_system& other);
 
     allocator_buddies_system(allocator_buddies_system&& other) noexcept;

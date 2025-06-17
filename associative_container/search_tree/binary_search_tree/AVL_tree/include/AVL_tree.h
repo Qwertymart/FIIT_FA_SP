@@ -624,16 +624,14 @@ namespace __detail {
         using avl_node = typename AVL_tree<tkey, tvalue, compare>::node;
         using base_node = typename binary_search_tree<tkey, tvalue, compare, AVL_TAG>::node;
 
-        auto *current = static_cast<avl_node *>((*node)->parent);  // Кастим на avl_node
+        auto *current = static_cast<avl_node *>((*node)->parent);
 
         while (current != nullptr) {
-            // Обновляем высоту для текущего узла
+
             current->recalculate_height();
 
-            // Получаем баланс текущего узла
             short balance = current->get_balance();
 
-            // Получаем ссылку на указатель в родителе (или на корень, если текущий — корень дерева)
             base_node *&subtree_ref = (current->parent == nullptr)
                                       ? cont._root
                                       : (current->parent->left_subtree == current
@@ -642,45 +640,44 @@ namespace __detail {
 
             if (balance > 1) { // Right-heavy
                 auto *right = static_cast<avl_node *>(current->right_subtree);
-                if (right && right->get_balance() < 0) { // Right-Left case
+                if (right && right->get_balance() < 0) {
                     base_node *&right_ref = (right->parent->left_subtree == right)
                                             ? right->parent->left_subtree
                                             : right->parent->right_subtree;
                     cont.small_right_rotation(right_ref);
-                    // Обновляем высоту после поворота
+
                     right->recalculate_height();
                 }
 
                 cont.small_left_rotation(subtree_ref);
-                // После поворота обновляем высоту для нового корня поддерева
+
                 static_cast<avl_node *>(current)->recalculate_height();
                 if (current->parent) {
                     static_cast<avl_node *>(current->parent)->recalculate_height();
                 }
 
-                current = static_cast<avl_node *>(subtree_ref);  // Переход к новому корню
-            } else if (balance < -1) { // Left-heavy
+                current = static_cast<avl_node *>(subtree_ref);
+            } else if (balance < -1) {
                 auto *left = static_cast<avl_node *>(current->left_subtree);
-                if (left && left->get_balance() > 0) { // Left-Right case
+                if (left && left->get_balance() > 0) {
                     base_node *&left_ref = (left->parent->left_subtree == left)
                                            ? left->parent->left_subtree
                                            : left->parent->right_subtree;
                     cont.small_left_rotation(left_ref);
-                    // Обновляем высоту после поворота
+
                     left->recalculate_height();
                 }
 
                 cont.small_right_rotation(subtree_ref);
-                // После поворота обновляем высоту для нового корня поддерева
+
                 static_cast<avl_node *>(current)->recalculate_height();
                 if (current->parent) {
                     static_cast<avl_node *>(current->parent)->recalculate_height();
                 }
 
-                current = static_cast<avl_node *>(subtree_ref);  // Переход к новому корню
+                current = static_cast<avl_node *>(subtree_ref);
             }
 
-            // Переходим к родительскому узлу и проверяем, нужно ли дальше обновлять баланс
             current = static_cast<avl_node *>(current->parent);
         }
     }

@@ -62,10 +62,10 @@ TEST(positive_tests, test1)
             },
         });
     
-    big_int bigint_1("32850346459076457453464575686784654");
-    big_int bigint_2("423534596495087569087908753095322");
-//    std::cout << "B1 = " << bigint_1 << std::endl;
-//    std::cout << "B2 = " << bigint_2 << std::endl;
+    big_int bigint_1("32850346459076457453464575686784654", 10);
+    big_int bigint_2("423534596495087569087908753095322", 10);
+    std::cout << "B1 = " << bigint_1 << std::endl;
+    std::cout << "B2 = " << bigint_2 << std::endl;
     big_int result_of_sum = bigint_1 + bigint_2;
     
     std::stringstream ss;

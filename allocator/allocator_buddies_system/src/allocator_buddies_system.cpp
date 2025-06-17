@@ -64,20 +64,6 @@ allocator_buddies_system& allocator_buddies_system::operator=(allocator_buddies_
     return *this;
 }
 
-allocator_buddies_system::allocator_buddies_system(const allocator_buddies_system& other) {
-    //выделяем по степени и копируем
-    if (other._trusted_memory) {
-        size_t k = *reinterpret_cast<unsigned char*>(
-                static_cast<char*>(other._trusted_memory) + sizeof(logger*) + sizeof(allocator_dbg_helper*) + sizeof(fit_mode));
-        size_t size = (1 << k) + allocator_metadata_size;
-
-        _trusted_memory = ::operator new(size);
-        std::memcpy(_trusted_memory, other._trusted_memory, size);
-    } else {
-        _trusted_memory = nullptr;
-    }
-}
-
 allocator_buddies_system& allocator_buddies_system::operator=(const allocator_buddies_system& other) {
     if (this != &other) {
         if (_trusted_memory) {
@@ -185,7 +171,6 @@ void allocator_buddies_system::do_deallocate_sm(void* at) {
         size_t offset = reinterpret_cast<char*>(block) - static_cast<char*>(_trusted_memory) - allocator_metadata_size;
         size_t size = get_size_block(block);
         size_t buddy_offset = offset ^ size;
-        // смещение относительно начала xor с размером = смещение "брата"
 
         auto* buddy = reinterpret_cast<block_metadata*>(
                 static_cast<char*>(_trusted_memory) + allocator_metadata_size + buddy_offset);
@@ -193,7 +178,6 @@ void allocator_buddies_system::do_deallocate_sm(void* at) {
         if (buddy->occupied || buddy->size != block->size) break;
 
         if (buddy < block) std::swap(buddy, block);
-        // меняем местами, чтобы всегда был меньший адрес
 
         block->size += 1;
         block->occupied = false;
